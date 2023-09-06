@@ -1,0 +1,11 @@
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://artifactory-external.vkpartner.ru/artifactory/maven")
+    }
+}
+
+dependencies {
+  implementation "androidx.core:core:1.9.0"
+  implementation "ru.rustore.sdk:pushclient:0.7.0"
+}

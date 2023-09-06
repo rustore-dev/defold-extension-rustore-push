@@ -1,0 +1,87 @@
+local function stringify(value, indentation)
+	indentation = indentation or "  "
+	local i = ""
+	local s = ""
+	local fmt_fn = nil
+	fmt_fn = function(v)
+		local t = type(v)
+		if t ~= "table" then
+			s = s .. (i .. v .. "\n")
+		else
+			for name,data in pairs(v) do
+				if type(data) == "table" then
+					s = s .. (i .. name .. " = {\n")
+					i = i .. indentation
+					fmt_fn(data)
+					i = i:sub(1,#i-#indentation)
+					s = s .. (i .. "}\n")
+				else
+					s = s .. (i .. name .. " = " .. tostring(data) .. ",\n")
+				end
+			end
+		end
+	end
+	fmt_fn(value)
+	return s
+end
+
+local function set_msg(text, ...)
+	text = text:format(...)
+	gui.set_text(gui.get_node("msg"), text)
+	print(text)
+end
+
+local function set_payload(text, ...)
+	text = text:format(...)
+	gui.set_text(gui.get_node("payload"), text)
+	print(text)
+end
+
+local function set_status(text, ...)
+	text = text:format(...)
+	gui.set_text(gui.get_node("status"), text)
+	print(text)
+end
+
+local function set_push_token(text, ...)
+	text = text:format(...)
+	gui.set_text(gui.get_node("push_token"), text)
+	print(text)
+end
+
+local function listener(self, payload, activated)
+	-- The payload arrives here.
+	set_msg(string.format("Push payload received: (activated: %s)", tostring(activated)))
+	set_payload(stringify(payload))
+	pprint(payload)
+end
+
+local function new_token(self, token, error)
+	if token then
+		set_push_token("Push token: %s", token)
+	else
+		set_push_token("Push error: %s", error.error)
+	end
+end
+
+local function push_android()
+	ruStorePush.set_on_token(new_token)
+	ruStorePush.set_on_message(listener)
+	
+	set_status("Rustore pushes registered")
+end
+
+function init(self)
+	local sysinfo = sys.get_sys_info()
+	if sysinfo.system_name == "Android" then
+		push_android()
+	else
+		set_status("Notifications work only Android")
+	end
+
+	if not ruStorePush then
+		return
+	end
+
+	msg.post(".", "acquire_input_focus")
+end

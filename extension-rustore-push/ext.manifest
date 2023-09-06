@@ -1,0 +1,6 @@
+name: RustorePushExtExternal
+
+platforms:
+    android:
+      context:
+        aaptExtraPackages: ['androidx.core', 'ru.rustore.sdk']

@@ -1,0 +1,24 @@
+[project]
+title = extension-rustore-push
+
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 640
+height = 1136
+
+[library]
+include_dirs = extension-rustore-push
+
+[android]
+input_method = HiddenInputField
+package = ru.rustore.defoldpush
+minimum_sdk_version = 23
+
+[native_extension]
+app_manifest = /generated.appmanifest
+
