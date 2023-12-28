@@ -12,6 +12,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.NotificationChannel;
 import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -24,20 +26,27 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
 import ru.rustore.sdk.pushclient.RuStorePushClient;
 import ru.rustore.sdk.pushclient.common.logger.DefaultLogger;
 import ru.rustore.sdk.core.tasks.OnCompleteListener;
+import com.vk.push.common.clientid.ClientId;
+import com.vk.push.common.clientid.ClientIdType;
+import com.vk.push.common.clientid.ClientIdCallback;
 
 public class Push {
-    public static final String TAG = "PushProcessor";
+    public static final String TAG = "ssss";
     public static final String DEFOLD_ACTIVITY = "com.dynamo.android.DefoldActivity";
     public static final String ACTION_FORWARD_PUSH = "ru.rustore.defoldpush.FORWARD";
     public static final String NOTIFICATION_CHANNEL_ID = "com.dynamo.android.notification_channel";
+    public static final String CLIP_DATA_TOOLTIP = "Copied Text";
 
     private String rustoreProjectId = "";
+    private ClientIdType clientIdType = null;
+    private String clientIdValue = null;
     private static Push instance;
 
     private IPushListener listener = null;
@@ -46,6 +55,21 @@ public class Push {
     public static boolean isDefoldActivityVisible() {
         Log.d(TAG, "Tracking Activity isVisible= " + defoldActivityVisible);
         return defoldActivityVisible;
+    }
+
+    public static void showToast(Activity activity, String message) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private static void copyToClipboard(Activity activity, String text) {
+        ClipboardManager clipboard = (ClipboardManager)activity.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText(CLIP_DATA_TOOLTIP, text);
+        clipboard.setPrimaryClip(clip);
     }
 
     final private class ActivityListener implements Application.ActivityLifecycleCallbacks {
@@ -87,19 +111,35 @@ public class Push {
     public void start(Activity activity, IPushListener listener, String rustoreProjectId, String projectTitle) {
         Log.d(TAG, String.format("Push started (%s %s)", listener, rustoreProjectId));
 
-        NotificationChannel channel = new NotificationChannel(
-            NOTIFICATION_CHANNEL_ID, 
-            projectTitle, 
-            NotificationManager.IMPORTANCE_DEFAULT
-        );
-
-        channel.enableVibration(true);
-        channel.setDescription("");
-
         NotificationManager notificationManager = activity.getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
+
+        Log.w(TAG, String.format("Govno %s", projectTitle));
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                NOTIFICATION_CHANNEL_ID, 
+                projectTitle, 
+                NotificationManager.IMPORTANCE_DEFAULT
+            );
+
+        Log.w(TAG, String.format("Govno 1"));
+
+            channel.enableVibration(true);
+            channel.setDescription("");
+
+        Log.w(TAG, String.format("Govno 2"));
+
+            notificationManager.createNotificationChannel(channel);
+        }
+
+
+Log.w(TAG, String.format("Govno 3"));
 
         this.listener = listener;
+
+Log.w(TAG, String.format("Govno 4"));
+
+        Log.w(TAG, String.format("Set project Id (%s)", rustoreProjectId));
         this.rustoreProjectId = rustoreProjectId;
     }
 
@@ -135,13 +175,28 @@ public class Push {
             return;
         }
 
+        ClientIdCallback clientIdCallback = null;
+        if (clientIdType != null) {
+            clientIdCallback = new ClientIdCallback() {
+                @Override
+                public ClientId getClientId() {
+                    if (clientIdType != null) {
+                        return new ClientId(clientIdValue != null ? clientIdValue : "", clientIdType);
+                    }
+                    return null;
+                }
+            };
+        }
+
         RuStorePushClient.INSTANCE.init(
             activity.getApplication(),
             this.rustoreProjectId,
             new DefaultLogger(Push.TAG),
             null,
             null,
-            false
+            false,
+            null,
+            clientIdCallback
         );
     }
 
@@ -292,4 +347,3 @@ public class Push {
         Log.e(Push.TAG, "listener not inited");
     }
 }
-

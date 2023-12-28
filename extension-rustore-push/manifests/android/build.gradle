@@ -6,6 +6,5 @@ repositories {
 }
 
 dependencies {
-  implementation "androidx.core:core:1.9.0"
-  implementation "ru.rustore.sdk:pushclient:0.7.0"
+    implementation "ru.rustore.sdk:pushclient:1.2.0"
 }

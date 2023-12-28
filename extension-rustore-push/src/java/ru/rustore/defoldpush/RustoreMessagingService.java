@@ -9,7 +9,7 @@ import javax.naming.Context;
 import android.util.Log;
 
 public class RustoreMessagingService extends RuStoreMessagingService {
-    private String TAG = "PushListenerService";
+    private String TAG = "ssss";
 
     @Override
     public void onNewToken(String token) {
