@@ -1,3 +1,5 @@
+local _token = ""
+
 local function stringify(value, indentation)
 	indentation = indentation or "  "
 	local i = ""
@@ -44,6 +46,7 @@ local function set_status(text, ...)
 end
 
 local function set_push_token(text, ...)
+	_token = ...
 	text = text:format(...)
 	gui.set_text(gui.get_node("push_token"), text)
 	print(text)
@@ -84,4 +87,14 @@ function init(self)
 	end
 
 	msg.post(".", "acquire_input_focus")
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		local button = gui.get_node("copy_button")
+		if gui.pick_node(button, action.x, action.y) then
+			ruStorePush.copy_to_clipboard(_token)
+			ruStorePush.show_toast("The token was copied")
+		end
+	end
 end

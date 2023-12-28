@@ -15,8 +15,9 @@ height = 1136
 include_dirs = extension-rustore-push
 
 [android]
+rustore_project_id = -Yv4b5cM2yfXm0bZyY6Rk7AHX8SrHmLI
+package = rustore.sdk.unreal.sample.third
 input_method = HiddenInputField
-package = ru.rustore.defoldpush
 minimum_sdk_version = 23
 
 [native_extension]

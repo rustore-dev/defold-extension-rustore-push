@@ -46,6 +46,48 @@ static int Push_NewToken(lua_State* L)
     return 0;
 }
 
+static int ShowToast(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defoldpush.Push");
+    jmethodID method = env->GetStaticMethodID(cls, "showToast", "(Landroid/app/Activity;Ljava/lang/String;)V");
+
+    const char* msg = (char*)luaL_checkstring(L, 1);
+    jstring jmsg = env->NewStringUTF(msg);
+
+    env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jmsg);
+
+    thread.Detach();
+
+    return 0;
+}
+
+static int CopyToClipboard(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defoldpush.Push");
+    jmethodID method = env->GetStaticMethodID(cls, "copyToClipboard", "(Landroid/app/Activity;Ljava/lang/String;)V");
+
+    const char* text = (char*)luaL_checkstring(L, 1);
+    jstring jtext = env->NewStringUTF(text);
+
+    env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jtext);
+
+    env->DeleteLocalRef(jtext);
+
+    thread.Detach();
+
+    return 0;
+}
+
 static int Push_SetListener(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
@@ -66,6 +108,8 @@ static const luaL_reg Push_methods[] =
 {
     {"set_on_token", Push_NewToken},
     {"set_on_message", Push_SetListener},
+    {"show_toast", ShowToast},
+    {"copy_to_clipboard", CopyToClipboard},
 
     {0, 0}
 };
