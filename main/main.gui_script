@@ -1,3 +1,5 @@
+local dirtylarry = require "dirtylarry.dirtylarry"
+
 local function stringify(value, indentation)
 	indentation = indentation or "  "
 	local i = ""
@@ -49,9 +51,9 @@ local function set_push_token(text, ...)
 	print(text)
 end
 
-local function listener(self, payload, activated)
+local function listener(self, payload, activated, from)
 	-- The payload arrives here.
-	set_msg(string.format("Push payload received: (activated: %s)", tostring(activated)))
+	set_msg(string.format("Push payload received: (from: %s, activated: %s)", from, tostring(activated)))
 	set_payload(stringify(payload))
 	pprint(payload)
 end
@@ -65,8 +67,13 @@ local function new_token(self, token, error)
 end
 
 local function push_android()
+	ruStorePush.set_client_id_callback(function(self)
+		return "", ruStorePush.CLIENT_AID_NOT_AVAILABLE
+	end)
+
 	ruStorePush.set_on_token(new_token)
 	ruStorePush.set_on_message(listener)
+
 	
 	set_status("Rustore pushes registered")
 end
@@ -84,4 +91,36 @@ function init(self)
 	end
 
 	msg.post(".", "acquire_input_focus")
+end
+
+function on_input(self, action_id, action)
+	if action_id then
+		dirtylarry:button("delete", action_id, action, function()
+			ruStorePush.delete_token(function (self, error)
+				if error then
+					set_msg("Error deleting token: %s", error.error)
+				else
+					set_msg("push token deleted")
+				end
+			end)
+		end)
+		dirtylarry:button("subscribe", action_id, action, function()
+			ruStorePush.topic_subscribe("defold", function (self, error)
+				if error then
+					set_msg("Error to subscribe: %s", error.error)
+				else
+					set_msg("subscribe to: defold")
+				end
+			end)
+		end)
+		dirtylarry:button("unsubscribe", action_id, action, function()
+			ruStorePush.topic_unsubscribe("defold", function (self, error)
+				if error then
+					set_msg("Error to subscribe: %s", error.error)
+				else
+					set_msg("unsubscribe from: defold")
+				end
+			end)
+		end)
+	end
 end

@@ -1,15 +1,25 @@
 #if defined(DM_PLATFORM_ANDROID)
-#ifndef DM_PUSH_UTILS
-#define DM_PUSH_UTILS
+#ifndef DM_RUSTORE_PUSH_UTILS
+#define DM_RUSTORE_PUSH_UTILS
 
 #include <dmsdk/sdk.h>
 
 namespace dmRustorePush
 {
+	enum ClientAdvertisingIdType
+	{
+		CLIENT_AID_NOT_AVAILABLE = 0,
+		CLIENT_GAID 			 = 1,
+		CLIENT_OAID 			 = 2,
+	};
+
 	enum CommandType
 	{
-		COMMAND_TYPE_NEW_TOKEN_RESULT  = 0,
-		COMMAND_TYPE_PUSH_MESSAGE_RESULT  = 1,
+		COMMAND_TYPE_NEW_TOKEN_RESULT  		  = 0,
+		COMMAND_TYPE_PUSH_MESSAGE_RESULT  	  = 1,
+		COMMAND_TYPE_DELETE_TOKEN_RESULT      = 2,
+		COMMAND_TYPE_SUBSCRIBE_TOPIC_RESULT   = 3,
+		COMMAND_TYPE_UNSUBSCRIBE_TOPIC_RESULT = 4,
 	};
 
 	struct Command
@@ -24,12 +34,13 @@ namespace dmRustorePush
 		const char* m_Result;
 		const char* m_Error;
 		bool     	m_WasActivated;
+		const char* m_From;
 	};
 
 	struct CommandQueue
 	{
 		dmArray<Command> m_Commands;
-		dmMutex::HMutex      m_Mutex;
+		dmMutex::HMutex  m_Mutex;
 	};
 
 	typedef void (*CommandFn)(Command* cmd, void* ctx);

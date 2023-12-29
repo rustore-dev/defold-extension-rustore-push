@@ -1,0 +1,235 @@
+- name: ruStorePush
+  type: table 
+  desc: Functions and constants for interacting with Rustore push notification services.
+        These API's only exist on Android platforms [icon:android]
+  members:
+
+#*****************************************************************************************************
+
+  - name: set_on_token
+    type: function
+    desc: Set listener for push tokens
+    parameters:
+    - desc: New Token callback function.
+      name: callback
+      type: function
+      parameters:
+      - name: self
+        type: object
+        desc: The current object.
+
+      - name: token
+        type: string
+        desc: Returned push token.
+
+      - name: error
+        type: table
+        desc: A table containing eventual error information.
+    
+    examples:
+    - desc: |-
+            Register for push notifications on Android.
+
+            ```lua
+            function init(self)
+                ruStorePush.set_on_token(function(self, token, error)
+                  if token then
+                    -- Push Token
+                    print(token)
+                  else
+                    -- Push registration failed.
+                    print(error.error)
+                  end
+                end)
+            end
+            ```
+
+#*****************************************************************************************************
+
+  - name: set_on_message
+    type: function
+    desc: Sets a listener function to listen to push notifications.
+    
+    parameters:
+    - name: listener
+      type: function
+      desc: Listener callback function.
+      parameters:
+      - name: self
+        type: object
+        desc: The current object.
+
+      - name: payload
+        type: table
+        desc: The push payload
+
+      - name: activated
+        type: boolean
+        desc: If the application was activated via the notification.
+      
+      - name: from
+        type: string
+        desc: Push comming from, used for topics
+
+    examples:
+    - desc: |-
+            Set the push notification listener.
+            ```lua
+            function init(self)
+                 ...
+                ruStorePush.set_on_message(function(self, payload, activated, from)
+                  -- The payload arrives here.
+                  pprint(payload)
+                end)
+            end
+            ```
+
+#*****************************************************************************************************
+
+  - name: set_client_id_callback
+    type: function
+    desc: Sets a callback function to get client id for targeting params.
+    
+    parameters:
+    - name: callback
+      type: function
+      desc: Callback function.
+      parameters:
+      - name: self
+        type: object
+        desc: The current object.
+      returns:
+      - name: AID
+        type: string
+        desc: advertising id
+      - name: AID type
+        type: number
+        desc: Client ID type
+
+    examples:
+    - desc: |-
+            Set the push notification listener.
+            ```lua
+            function init(self)
+                 ...
+                ruStorePush.set_client_id_callback(function(self)
+                  return "", ruStorePush.CLIENT_AID_NOT_AVAILABLE
+                end)
+            end
+            ```
+
+#*****************************************************************************************************
+
+  - name: delete_token
+    type: function
+    desc: delete push token
+    
+    parameters:
+    - name: listener
+      type: function
+      desc: Listener callback function.
+      parameters:
+      - name: self
+        type: object
+        desc: The current object.
+
+      - name: error
+        type: table
+        desc: A table containing eventual error information.
+
+    examples:
+    - desc: |-
+            Delete push token.
+            ```lua
+            function init(self)
+                 ...
+                ruStorePush.delete_token(function(self, error)
+                  if error then
+                    pprint(error.error)
+                  end
+                  
+                end)
+            end
+            ```
+
+#*****************************************************************************************************
+
+  - name: topic_subscribe
+    type: function
+    desc: Subscribe to topic
+    
+    parameters:
+    - name: listener
+      type: function
+      desc: Listener callback function.
+      parameters:
+      - name: self
+        type: object
+        desc: The current object.
+
+      - name: error
+        type: table
+        desc: A table containing eventual error information.
+
+    examples:
+    - desc: |-
+            Subscribe to topic
+            ```lua
+            function init(self)
+                 ...
+                ruStorePush.topic_subscribe("test_subs", function(self, error)
+                  if error then
+                    pprint(error.error)
+                  end
+                  
+                end)
+            end
+            ```
+
+#*****************************************************************************************************
+
+  - name: topic_unsubscribe
+    type: function
+    desc: Unsubscribe to topic
+    
+    parameters:
+    - name: listener
+      type: function
+      desc: Listener callback function.
+      parameters:
+      - name: self
+        type: object
+        desc: The current object.
+
+      - name: error
+        type: table
+        desc: A table containing eventual error information.
+
+    examples:
+    - desc: |-
+            Unsubscribe from topic
+            ```lua
+            function init(self)
+                 ...
+                ruStorePush.topic_unsubscribe("test_subs", function(self, error)
+                  if error then
+                    pprint(error.error)
+                  end
+                  
+                end)
+            end
+            ```
+
+#*****************************************************************************************************
+
+  - name: CLIENT_AID_NOT_AVAILABLE
+    type: number
+    desc: Client ID type for push Client id callback for targeting
+
+  - name: CLIENT_GAID
+    type: number
+    desc: GAID
+  
+  - name: CLIENT_OAID
+    type: number
+    desc: GAID

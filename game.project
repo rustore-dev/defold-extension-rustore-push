@@ -1,5 +1,6 @@
 [project]
 title = extension-rustore-push
+dependencies#0 = https://github.com/andsve/dirtylarry/archive/master.zip
 
 [bootstrap]
 main_collection = /main/main.collectionc

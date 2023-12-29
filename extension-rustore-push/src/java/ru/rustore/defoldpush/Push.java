@@ -1,12 +1,14 @@
 package ru.rustore.defoldpush;
 
-import android.app.Application;
-
 import java.util.Map;
+import java.util.HashMap;
+
+import kotlin.Unit;
 
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import android.app.Application;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -31,8 +33,10 @@ import ru.rustore.sdk.pushclient.RuStorePushClient;
 import ru.rustore.sdk.pushclient.common.logger.DefaultLogger;
 import ru.rustore.sdk.core.tasks.OnCompleteListener;
 
+import com.vk.push.common.clientid.ClientIdCallback;
+
 public class Push {
-    public static final String TAG = "PushProcessor";
+    public static final String TAG = "RustorePushProcessor";
     public static final String DEFOLD_ACTIVITY = "com.dynamo.android.DefoldActivity";
     public static final String ACTION_FORWARD_PUSH = "ru.rustore.defoldpush.FORWARD";
     public static final String NOTIFICATION_CHANNEL_ID = "com.dynamo.android.notification_channel";
@@ -41,41 +45,42 @@ public class Push {
     private static Push instance;
 
     private IPushListener listener = null;
+    private ClientIdCallback clientIdCallback = null;
 
     private static boolean defoldActivityVisible;
     public static boolean isDefoldActivityVisible() {
-        Log.d(TAG, "Tracking Activity isVisible= " + defoldActivityVisible);
+        Log.d(Push.TAG, "Tracking Activity isVisible= " + defoldActivityVisible);
         return defoldActivityVisible;
     }
 
-    final private class ActivityListener implements Application.ActivityLifecycleCallbacks {
-        public final void onActivityResumed(Activity activity) {
+    static final private class ActivityListener implements Application.ActivityLifecycleCallbacks {
+        public void onActivityResumed(Activity activity) {
             if (activity.getLocalClassName().equals(DEFOLD_ACTIVITY)) {
                 defoldActivityVisible = true;
-                Log.d(TAG, "Tracking Activity Resumed "+activity.getLocalClassName());
+                Log.d(Push.TAG, "Tracking Activity Resumed "+activity.getLocalClassName());
             }
         }
 
-        public final void onActivityPaused(Activity activity) {
+        public void onActivityPaused(Activity activity) {
             if (activity.getLocalClassName().equals(DEFOLD_ACTIVITY)) {
                 defoldActivityVisible = false;
-                Log.d(TAG, "Tracking Activity Paused "+activity.getLocalClassName());
+                Log.d(Push.TAG, "Tracking Activity Paused "+activity.getLocalClassName());
             }
         }
 
-        public final void onActivityDestroyed(Activity activity) {
+        public void onActivityDestroyed(Activity activity) {
         }
 
-        public final void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+        public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
         }
 
-        public final void onActivityStopped(Activity activity) {
+        public void onActivityStopped(Activity activity) {
         }
 
-        public final void onActivityStarted(Activity activity) {
+        public void onActivityStarted(Activity activity) {
         }
 
-        public final void onActivityCreated(Activity activity, Bundle bundle) {
+        public void onActivityCreated(Activity activity, Bundle bundle) {
         }
     }
 
@@ -84,27 +89,36 @@ public class Push {
         activity.getApplication().registerActivityLifecycleCallbacks(new ActivityListener());
     }
 
-    public void start(Activity activity, IPushListener listener, String rustoreProjectId, String projectTitle) {
-        Log.d(TAG, String.format("Push started (%s %s)", listener, rustoreProjectId));
+    public void start(
+        Activity activity, 
+        IPushListener listener,
+        ClientIdCallback clientIdCallback,
+        String rustoreProjectId, 
+        String projectTitle
+    ) {
+        Log.d(Push.TAG, String.format("Push started (%s %s)", listener, rustoreProjectId));
 
-        NotificationChannel channel = new NotificationChannel(
-            NOTIFICATION_CHANNEL_ID, 
-            projectTitle, 
-            NotificationManager.IMPORTANCE_DEFAULT
-        );
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                NOTIFICATION_CHANNEL_ID, 
+                projectTitle, 
+                NotificationManager.IMPORTANCE_DEFAULT
+            );
 
-        channel.enableVibration(true);
-        channel.setDescription("");
+            channel.enableVibration(true);
+            channel.setDescription("");
 
-        NotificationManager notificationManager = activity.getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
+            NotificationManager notificationManager = activity.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
 
         this.listener = listener;
+        this.clientIdCallback = clientIdCallback;
         this.rustoreProjectId = rustoreProjectId;
     }
 
     public void stop() {
-        Log.d(TAG, "Push stopped");
+        Log.d(Push.TAG, "Push stopped");
         this.listener = null;
     }
 
@@ -139,9 +153,13 @@ public class Push {
             activity.getApplication(),
             this.rustoreProjectId,
             new DefaultLogger(Push.TAG),
+            new HashMap<String, String>() {{
+                put("type", "defold");
+            }},
             null,
+            false,
             null,
-            false
+            clientIdCallback
         );
     }
 
@@ -152,7 +170,7 @@ public class Push {
                 @Override
                 public void onSuccess(String result) {
                     Log.d(Push.TAG, "getToken onSuccess token = " + result);
-                    sendToken(result);
+                    sendOnNewTokenResult(result, null);
                 }
                 @Override
                 public void onFailure(Throwable throwable) {
@@ -161,12 +179,117 @@ public class Push {
                 }
          });
     }
+
+    public void deleteToken(final Activity activity) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                deleteToken();
+            }
+        });
+    }
+
+    private void deleteToken() {
+        RuStorePushClient
+            .INSTANCE
+            .deleteToken()
+            .addOnCompleteListener(new OnCompleteListener<Unit>() {
+                @Override
+                public void onFailure(Throwable throwable) {
+                    Log.e(Push.TAG, "deleteToken onFailure", throwable);
+                    sendOnDeleteTokenResult("Failed to delete push token");
+                }
+                
+                @Override
+                public void onSuccess(Unit result) {
+                    Log.d(Push.TAG, "deleteToken onSuccess");
+                    sendOnDeleteTokenResult(null);
+                }
+            });
+    }
+
+    public void topicSubscribe(final Activity activity, String topic) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                subscribeToTopic(topic);
+            }
+        });
+    }
+
+    private void subscribeToTopic(String topic) {
+        RuStorePushClient
+            .INSTANCE
+            .subscribeToTopic(topic)
+            .addOnCompleteListener(new OnCompleteListener<Unit>() {
+                @Override
+                public void onFailure(Throwable throwable) {
+                    Log.e(Push.TAG, "subscribeToTopic onFailure", throwable);
+                    sendOnTopicSubscribe("Failed to subscribe to topic=" + topic);
+                }
+                @Override
+                public void onSuccess(Unit result) {
+                    Log.d(Push.TAG, "subscribeToTopic onSuccess");
+                    sendOnTopicSubscribe(null);
+                }
+            });
+    }
+
+    public void topicUnsubscribe(final Activity activity, String topic) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                unsubscribeFromTopic(topic);
+            }
+        });
+    }
+    private void unsubscribeFromTopic(String topic) {
+        RuStorePushClient
+            .INSTANCE
+            .unsubscribeFromTopic(topic)
+            .addOnCompleteListener(new OnCompleteListener<Unit>() {
+                @Override
+                public void onFailure(Throwable throwable) {
+                    Log.e(Push.TAG, "unsubscribeFromTopic onFailure", throwable);
+                    sendOnTopicUnsubscribe("Failed to unsubscribe from topic=" + topic);
+                }
+                @Override
+                public void onSuccess(Unit result) {
+                    Log.d(Push.TAG, "unsubscribeFromTopic onSuccess");
+                    sendOnTopicUnsubscribe(null);
+                }
+            });
+    }
     
     private void sendOnNewTokenResult(String pushToken, String errorMessage) {
         if (listener != null) {
             listener.onNewToken(pushToken, errorMessage);
         } else {
-            Log.e(TAG, "No listener new token callback set");
+            Log.e(Push.TAG, "No listener set");
+        }
+    }
+
+    private void sendOnDeleteTokenResult(String errorMessage) {
+        if (listener != null) {
+            listener.onDeleteToken(errorMessage);
+        } else {
+            Log.e(Push.TAG, "No listener set");
+        }
+    }
+
+    private void sendOnTopicSubscribe(String errorMessage) {
+        if (listener != null) {
+             listener.onSubscribeToTopic(errorMessage);
+        } else {
+            Log.e(Push.TAG, "No listener set");
+        }
+    }
+
+    private void sendOnTopicUnsubscribe(String errorMessage) {
+        if (listener != null) {
+             listener.onUnsubscribeFromTopic(errorMessage);
+        } else {
+            Log.e(Push.TAG, "No listener set");
         }
     }
 
@@ -176,7 +299,7 @@ public class Push {
             try {
                 o.put(entry.getKey(), entry.getValue());
             } catch (JSONException e) {
-                Log.e(TAG, "failed to create json-object", e);
+                Log.e(Push.TAG, "failed to create json-object", e);
             }
         }
         
@@ -190,13 +313,13 @@ public class Push {
         return flags;
     }
 
-    public void showNotification(Context context, Map<String, String> extras, boolean withNotification) {
+    public void showNotification(Context context, String from,  Map<String, String> extras, boolean withNotification) {
         JSONObject payloadJson = toJson(extras);
         String payloadString = payloadJson.toString();
 
         // if was notification push is showed
         if (isDefoldActivityVisible() || withNotification) {
-            onPush(context, payloadString, false);
+            onPush(context, from, payloadString, false);
             return;
         }
 
@@ -204,6 +327,7 @@ public class Push {
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         intent.putExtra("payload", payloadString);
+        intent.putExtra("from", from);
 
         int id = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
         final int flags = createPendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
@@ -237,7 +361,7 @@ public class Push {
 
         String text = extras.get(fieldText);
         if (text == null) {
-            Log.w(TAG, "Missing text field in push message");
+            Log.w(Push.TAG, "Missing text field in push message");
             text = "New message";
         }
 
@@ -283,9 +407,9 @@ public class Push {
         nm.notify(id, notification);
     }
 
-    public void onPush(Context context, String payload, boolean wasActivated) {
+    public void onPush(Context context, String from, String payload, boolean wasActivated) {
         if (listener != null) {
-            listener.onMessage(payload, wasActivated);
+            listener.onMessage(payload, wasActivated, from);
             Log.d(Push.TAG, "send to listener");
             return;
         }

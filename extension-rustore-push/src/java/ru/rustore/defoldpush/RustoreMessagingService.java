@@ -26,8 +26,8 @@ public class RustoreMessagingService extends RuStoreMessagingService {
                 withNotification = true;
                 Log.w(TAG, "with notification title");
             }
-            Log.d(TAG, "onMessageReceived data = " + message.getData());
-            Push.getInstance().showNotification(this, message.getData(), withNotification);
+            Log.d(TAG, "onMessageReceived from = " + message.getFrom() + " data = " + message.getData());
+            Push.getInstance().showNotification(this, message.getFrom(), message.getData(), withNotification);
         }
    }
 }

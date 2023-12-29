@@ -6,6 +6,7 @@ repositories {
 }
 
 dependencies {
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
   implementation "androidx.core:core:1.9.0"
-  implementation "ru.rustore.sdk:pushclient:0.7.0"
+  implementation "ru.rustore.sdk:pushclient:1.3.0"
 }
