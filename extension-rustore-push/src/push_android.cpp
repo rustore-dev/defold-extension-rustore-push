@@ -1,14 +1,4 @@
-// // DEV
-// #ifndef ANDROID
-// #define ANDROID
-// #endif
-
-// #ifndef DM_PLATFORM_ANDROID
-// #define DM_PLATFORM_ANDROID
-// #endif
-// ///
 #if defined(DM_PLATFORM_ANDROID)
-
 #include <jni.h>
 #include <unistd.h>
 #include <stdlib.h>
