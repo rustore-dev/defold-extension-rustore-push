@@ -1,7 +1,6 @@
 package ru.rustore.defoldpush;
 
 import java.util.Map;
-import java.util.HashMap;
 
 import kotlin.Unit;
 
@@ -30,18 +29,17 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import ru.rustore.sdk.pushclient.RuStorePushClient;
-import ru.rustore.sdk.pushclient.common.logger.DefaultLogger;
 import ru.rustore.sdk.core.tasks.OnCompleteListener;
 
+import com.vk.push.common.clientid.ClientId;
 import com.vk.push.common.clientid.ClientIdCallback;
 
-public class Push {
+public class Push implements ClientIdCallback  {
     public static final String TAG = "RustorePushProcessor";
     public static final String DEFOLD_ACTIVITY = "com.dynamo.android.DefoldActivity";
     public static final String ACTION_FORWARD_PUSH = "ru.rustore.defoldpush.FORWARD";
     public static final String NOTIFICATION_CHANNEL_ID = "com.dynamo.android.notification_channel";
 
-    private String rustoreProjectId = "";
     private static Push instance;
 
     private IPushListener listener = null;
@@ -93,10 +91,9 @@ public class Push {
         Activity activity, 
         IPushListener listener,
         ClientIdCallback clientIdCallback,
-        String rustoreProjectId, 
         String projectTitle
     ) {
-        Log.d(Push.TAG, String.format("Push started (%s %s)", listener, rustoreProjectId));
+        Log.d(Push.TAG, "Push started");
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -114,7 +111,6 @@ public class Push {
 
         this.listener = listener;
         this.clientIdCallback = clientIdCallback;
-        this.rustoreProjectId = rustoreProjectId;
     }
 
     public void stop() {
@@ -126,7 +122,6 @@ public class Push {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                initRustore(activity);
                 getToken(activity);
             }
         });
@@ -139,28 +134,15 @@ public class Push {
         return instance;
     }
 
-    public void sendToken(String token) {
-        sendOnNewTokenResult(token, null);
+    public ClientId getClientId() {
+        if (clientIdCallback != null) {
+            return clientIdCallback.getClientId();
+        }
+        return null;
     }
 
-    private void initRustore(Activity activity) {
-        if (this.rustoreProjectId == null || this.rustoreProjectId == "") {
-            Log.w(Push.TAG, "Rustore application Id must be set.");
-            return;
-        }
-
-        RuStorePushClient.INSTANCE.init(
-            activity.getApplication(),
-            this.rustoreProjectId,
-            new DefaultLogger(Push.TAG),
-            new HashMap<String, String>() {{
-                put("type", "defold");
-            }},
-            null,
-            false,
-            null,
-            clientIdCallback
-        );
+    public void sendToken(String token) {
+        sendOnNewTokenResult(token, null);
     }
 
     private void getToken(Activity activity) {

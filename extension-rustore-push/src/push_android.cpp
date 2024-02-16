@@ -356,7 +356,7 @@ static dmExtension::Result AppInitializePush(dmExtension::AppParams* params)
     jclass push_jni_class = dmAndroid::LoadClass(env, "ru.rustore.defoldpush.PushJNI");
     jclass client_id_callback_jni_class = dmAndroid::LoadClass(env, "ru.rustore.defoldpush.ClientIdCallbackJNI");
 
-    g_Push.m_Start = env->GetMethodID(push_class, "start", "(Landroid/app/Activity;Lru/rustore/defoldpush/IPushListener;Lcom/vk/push/common/clientid/ClientIdCallback;Ljava/lang/String;Ljava/lang/String;)V");
+    g_Push.m_Start = env->GetMethodID(push_class, "start", "(Landroid/app/Activity;Lru/rustore/defoldpush/IPushListener;Lcom/vk/push/common/clientid/ClientIdCallback;Ljava/lang/String;)V");
     g_Push.m_Stop = env->GetMethodID(push_class, "stop", "()V");
     g_Push.m_NewToken = env->GetMethodID(push_class, "newToken", "(Landroid/app/Activity;)V");
     g_Push.m_DeleteToken = env->GetMethodID(push_class, "deleteToken", "(Landroid/app/Activity;)V");
@@ -375,9 +375,7 @@ static dmExtension::Result AppInitializePush(dmExtension::AppParams* params)
     jmethodID jni_client_id_constructor = env->GetMethodID(client_id_callback_jni_class, "<init>", "()V");
     g_Push.m_ClientIdCallbackJNI = env->NewGlobalRef(env->NewObject(client_id_callback_jni_class, jni_client_id_constructor));
 
-    const char* rustore_project_id = dmConfigFile::GetString(params->m_ConfigFile, "android.rustore_project_id", "");
     const char* project_title = dmConfigFile::GetString(params->m_ConfigFile, "project.title", "");
-    jstring rustore_project_id_string = env->NewStringUTF(rustore_project_id);
     jstring project_title_string = env->NewStringUTF(project_title);
 
     env->CallVoidMethod(
@@ -386,11 +384,9 @@ static dmExtension::Result AppInitializePush(dmExtension::AppParams* params)
         dmGraphics::GetNativeAndroidActivity(), 
         g_Push.m_PushJNI, 
         g_Push.m_ClientIdCallbackJNI, 
-        rustore_project_id_string, 
         project_title_string
     );
 
-    env->DeleteLocalRef(rustore_project_id_string);
     env->DeleteLocalRef(project_title_string);
 
     return dmExtension::RESULT_OK;

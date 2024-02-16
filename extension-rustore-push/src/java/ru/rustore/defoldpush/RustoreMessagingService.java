@@ -4,8 +4,6 @@ import ru.rustore.sdk.pushclient.messaging.service.RuStoreMessagingService;
 import ru.rustore.sdk.pushclient.messaging.model.RemoteMessage;
 import ru.rustore.sdk.pushclient.messaging.model.Notification;
 
-import javax.naming.Context;
-
 import android.util.Log;
 
 public class RustoreMessagingService extends RuStoreMessagingService {
