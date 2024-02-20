@@ -47,7 +47,6 @@ push_field_text = default push body
 
 ## Usage
 
-Now everything is ready on the client.
 Add this code to yor application.
 
 ```lua
@@ -65,6 +64,10 @@ local function new_token(self, token, error)
 end
 
 local function push_android()
+    ruStorePush.set_client_id_callback(function(self)
+        return "", ruStorePush.CLIENT_AID_NOT_AVAILABLE
+    end)
+    
     ruStorePush.set_on_token(new_token)
     ruStorePush.set_on_message(listener)
     
@@ -113,6 +116,56 @@ Replace `%PROJECT_ID%` with your project id from console.
 Replace `%SERVICE_TOKEN%` with your service token from console.
 
 Replace `%PUSH_TOKEN%` with your push token.
+
+### Remove Push token
+
+If you want to remove push token call function `delete_token`
+
+```lua
+ruStorePush.delete_token(function (self, error)
+    if error then
+        set_msg("Error deleting token: %s", error.error)
+    else
+        set_msg("push token deleted")
+    end
+end)
+```
+
+### Segments
+
+If you want to add segments, you need to provide listener `set_client_id_callback`, listener must return AID, and type (GAID, OAID)
+
+```lua
+local function push_android()
+    ruStorePush.set_client_id_callback(function(self)
+        return "", ruStorePush.CLIENT_AID_NOT_AVAILABLE
+    end)
+    --- ....
+    print("Rustore pushes registered")
+end
+```
+
+### Topics
+
+You can subscribe/unsubscribe from topics
+
+```lua
+ruStorePush.topic_subscribe("topic_name", function (self, error)
+    if error then
+        set_msg("Error to subscribe: %s", error.error)
+    else
+        set_msg("subscribe to: topic_name")
+    end
+end)
+
+ruStorePush.topic_unsubscribe("topic_name", function (self, error)
+    if error then
+        set_msg("Error to subscribe: %s", error.error)
+    else
+        set_msg("unsubscribe from: topic_name")
+    end
+end)
+```
 
 ### Important
 
