@@ -66,27 +66,122 @@ static void HandlePushMessageResult(const dmRustorePush::Command* cmd)
 
     dmScript::JsonToLua(L, json, strlen(json));
     lua_pushboolean(L, cmd->m_WasActivated);
+    lua_pushstring(L, cmd->m_From);
 
-    int ret = dmScript::PCall(L, 3, 0);
+    int ret = dmScript::PCall(L, 4, 0);
     (void)ret;
 
     dmScript::TeardownCallback(cmd->m_Callback);
 }
 
+static void HandleDeleteTokenResult(const dmRustorePush::Command* cmd)
+{
+    if (!dmScript::IsCallbackValid(cmd->m_Callback))
+    {
+        return;
+    }
+
+    lua_State* L = dmScript::GetCallbackLuaContext(cmd->m_Callback);
+    DM_LUA_STACK_CHECK(L, 0);
+
+    if (!dmScript::SetupCallback(cmd->m_Callback))
+    {
+        return;
+    }
+
+    if (cmd->m_Error) {
+        PushError(L, cmd->m_Error);
+        dmLogError("HandleDeleteTokenResult: %s", cmd->m_Error);
+    } else {
+        lua_pushnil(L);
+    }
+
+    int ret = dmScript::PCall(L, 2, 0);
+    (void)ret;
+
+    dmScript::TeardownCallback(cmd->m_Callback);
+}
+
+static void HandleTopicSubscribeResult(const dmRustorePush::Command* cmd)
+{
+    if (!dmScript::IsCallbackValid(cmd->m_Callback))
+    {
+        return;
+    }
+
+    lua_State* L = dmScript::GetCallbackLuaContext(cmd->m_Callback);
+    DM_LUA_STACK_CHECK(L, 0);
+
+    if (!dmScript::SetupCallback(cmd->m_Callback))
+    {
+        return;
+    }
+
+    if (cmd->m_Error) {
+        PushError(L, cmd->m_Error);
+        dmLogError("HandleTopicSubscribeResult: %s", cmd->m_Error);
+    } else {
+        lua_pushnil(L);
+    }
+
+    int ret = dmScript::PCall(L, 2, 0);
+    (void)ret;
+
+    dmScript::TeardownCallback(cmd->m_Callback);
+}
+
+static void HandleTopicUnsubscribeResult(const dmRustorePush::Command* cmd)
+{
+    if (!dmScript::IsCallbackValid(cmd->m_Callback))
+    {
+        return;
+    }
+
+    lua_State* L = dmScript::GetCallbackLuaContext(cmd->m_Callback);
+    DM_LUA_STACK_CHECK(L, 0);
+
+    if (!dmScript::SetupCallback(cmd->m_Callback))
+    {
+        return;
+    }
+
+    if (cmd->m_Error) {
+        PushError(L, cmd->m_Error);
+        dmLogError("HandleTopicUnsubscribeResult: %s", cmd->m_Error);
+    } else {
+        lua_pushnil(L);
+    }
+
+    int ret = dmScript::PCall(L, 2, 0);
+    (void)ret;
+
+    dmScript::TeardownCallback(cmd->m_Callback);
+}
 
 void dmRustorePush::HandleCommand(dmRustorePush::Command* cmd, void* ctx)
 {
-    switch (cmd->m_Command)
-    {
-    case dmRustorePush::COMMAND_TYPE_NEW_TOKEN_RESULT:  HandleNewTokenResult(cmd); break;
-    case dmRustorePush::COMMAND_TYPE_PUSH_MESSAGE_RESULT:  HandlePushMessageResult(cmd); break;
-    default: assert(false);
+    switch (cmd->m_Command) {
+        case dmRustorePush::COMMAND_TYPE_NEW_TOKEN_RESULT:    HandleNewTokenResult(cmd); break;
+        case dmRustorePush::COMMAND_TYPE_PUSH_MESSAGE_RESULT: HandlePushMessageResult(cmd); break;
+        case dmRustorePush::COMMAND_TYPE_DELETE_TOKEN_RESULT: HandleDeleteTokenResult(cmd); break;
+        case dmRustorePush::COMMAND_TYPE_SUBSCRIBE_TOPIC_RESULT: HandleTopicSubscribeResult(cmd); break;
+        case dmRustorePush::COMMAND_TYPE_UNSUBSCRIBE_TOPIC_RESULT: HandleTopicUnsubscribeResult(cmd); break;
+        default: assert(false);
     }
+
     free((void*)cmd->m_Result);
     free((void*)cmd->m_Error);
+    free((void*)cmd->m_From);
 
-    if (cmd->m_Command == dmRustorePush::COMMAND_TYPE_NEW_TOKEN_RESULT && dmScript::IsCallbackValid(cmd->m_Callback))
-        dmScript::DestroyCallback(cmd->m_Callback);
+    // free callbacks
+    switch (cmd->m_Command) {
+        case dmRustorePush::COMMAND_TYPE_DELETE_TOKEN_RESULT:
+        case dmRustorePush::COMMAND_TYPE_SUBSCRIBE_TOPIC_RESULT:
+        case dmRustorePush::COMMAND_TYPE_UNSUBSCRIBE_TOPIC_RESULT:
+            if(dmScript::IsCallbackValid(cmd->m_Callback))
+                dmScript::DestroyCallback(cmd->m_Callback);
+            break;
+    }
 }
 
 void dmRustorePush::QueueCreate(CommandQueue* queue)

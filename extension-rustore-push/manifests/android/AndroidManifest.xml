@@ -43,7 +43,15 @@
                 <action android:name="ru.rustore.sdk.pushclient.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <meta-data
+            android:name="ru.rustore.sdk.pushclient.project_id"
+            android:value="{{android.rustore_project_id}}" />
+
+        <meta-data
+            android:name="ru.rustore.sdk.pushclient.params_class"
+            android:value="ru.rustore.defoldpush.RuStorePushClientParams" />
     </application>
+
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />

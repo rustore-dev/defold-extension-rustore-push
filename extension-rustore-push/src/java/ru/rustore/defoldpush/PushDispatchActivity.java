@@ -10,12 +10,14 @@ import android.util.Log;
 public class PushDispatchActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             String payload = extras.getString("payload");
-            Push.getInstance().onPush(this, payload, true);
+            String from = extras.getString("from");
+
+            Push.getInstance().onPush(this, from, payload, true);
+            
             Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
@@ -23,6 +25,7 @@ public class PushDispatchActivity extends Activity {
             Log.e(Push.TAG, "Unable to queue message. extras is null");
         }
 
+        super.onCreate(savedInstanceState);
         finish();
     }
 }

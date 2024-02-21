@@ -4,8 +4,6 @@ import ru.rustore.sdk.pushclient.messaging.service.RuStoreMessagingService;
 import ru.rustore.sdk.pushclient.messaging.model.RemoteMessage;
 import ru.rustore.sdk.pushclient.messaging.model.Notification;
 
-import javax.naming.Context;
-
 import android.util.Log;
 
 public class RustoreMessagingService extends RuStoreMessagingService {
@@ -26,8 +24,8 @@ public class RustoreMessagingService extends RuStoreMessagingService {
                 withNotification = true;
                 Log.w(TAG, "with notification title");
             }
-            Log.d(TAG, "onMessageReceived data = " + message.getData());
-            Push.getInstance().showNotification(this, message.getData(), withNotification);
+            Log.d(TAG, "onMessageReceived from = " + message.getFrom() + " data = " + message.getData());
+            Push.getInstance().showNotification(this, message.getFrom(), message.getData(), withNotification);
         }
    }
 }
