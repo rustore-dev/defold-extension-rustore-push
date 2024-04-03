@@ -13,6 +13,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.NotificationChannel;
 import android.app.PendingIntent;
+import android.content.ClipboardManager;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +27,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
@@ -38,6 +41,7 @@ public class Push implements ClientIdCallback  {
     public static final String DEFOLD_ACTIVITY = "com.dynamo.android.DefoldActivity";
     public static final String ACTION_FORWARD_PUSH = "ru.rustore.defoldpush.FORWARD";
     public static final String NOTIFICATION_CHANNEL_ID = "com.dynamo.android.notification_channel";
+    public static final String CLIP_DATA_TOOLTIP = "Copied Text";
 
     private static Push instance;
 
@@ -378,5 +382,19 @@ public class Push implements ClientIdCallback  {
             return;
         }
         Log.e(Push.TAG, "listener not inited");
+    }
+
+    public void showToast(final Activity activity, String message) {
+        activity.runOnUiThread(() -> Toast.makeText(activity, message, Toast.LENGTH_LONG).show());
+    }
+
+    public void copyToClipboard(final Activity activity, String text) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) return;
+
+        if (activity != null) {
+            ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText(CLIP_DATA_TOOLTIP, text);
+            clipboard.setPrimaryClip(clip);
+        }
     }
 }

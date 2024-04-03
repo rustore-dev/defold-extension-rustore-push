@@ -1,4 +1,5 @@
 local dirtylarry = require "dirtylarry.dirtylarry"
+local lastToken = ""
 
 local function stringify(value, indentation)
 	indentation = indentation or "  "
@@ -61,8 +62,10 @@ end
 local function new_token(self, token, error)
 	if token then
 		set_push_token("Push token: %s", token)
+		lastToken = token
 	else
 		set_push_token("Push error: %s", error.error)
+		lastToken = ""
 	end
 end
 
@@ -121,6 +124,10 @@ function on_input(self, action_id, action)
 					set_msg("unsubscribe from: defold")
 				end
 			end)
+		end)
+		dirtylarry:button("copy", action_id, action, function()
+			ruStorePush.copy_to_clipboard(lastToken)
+			ruStorePush.show_toast("Copied to the clipboard")
 		end)
 	end
 end
