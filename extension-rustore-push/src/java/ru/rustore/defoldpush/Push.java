@@ -29,7 +29,6 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import ru.rustore.sdk.pushclient.RuStorePushClient;
-import ru.rustore.sdk.core.tasks.OnCompleteListener;
 
 import com.vk.push.common.clientid.ClientId;
 import com.vk.push.common.clientid.ClientIdCallback;
@@ -148,18 +147,14 @@ public class Push implements ClientIdCallback  {
     private void getToken(Activity activity) {
         RuStorePushClient.INSTANCE
             .getToken()
-            .addOnCompleteListener(new OnCompleteListener<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(Push.TAG, "getToken onSuccess token = " + result);
-                    sendOnNewTokenResult(result, null);
-                }
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "getToken onFailure", throwable);
-                    sendOnNewTokenResult(null, "Failed to get push token");
-                }
-         });
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "getToken onSuccess token = " + result);
+                sendOnNewTokenResult(result, null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "getToken onFailure", throwable);
+                sendOnNewTokenResult(null, "Failed to get push token");
+            });
     }
 
     public void deleteToken(final Activity activity) {
@@ -175,18 +170,13 @@ public class Push implements ClientIdCallback  {
         RuStorePushClient
             .INSTANCE
             .deleteToken()
-            .addOnCompleteListener(new OnCompleteListener<Unit>() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "deleteToken onFailure", throwable);
-                    sendOnDeleteTokenResult("Failed to delete push token");
-                }
-                
-                @Override
-                public void onSuccess(Unit result) {
-                    Log.d(Push.TAG, "deleteToken onSuccess");
-                    sendOnDeleteTokenResult(null);
-                }
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "deleteToken onSuccess");
+                sendOnDeleteTokenResult(null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "deleteToken onFailure", throwable);
+                sendOnDeleteTokenResult("Failed to delete push token");
             });
     }
 
@@ -203,17 +193,13 @@ public class Push implements ClientIdCallback  {
         RuStorePushClient
             .INSTANCE
             .subscribeToTopic(topic)
-            .addOnCompleteListener(new OnCompleteListener<Unit>() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "subscribeToTopic onFailure", throwable);
-                    sendOnTopicSubscribe("Failed to subscribe to topic=" + topic);
-                }
-                @Override
-                public void onSuccess(Unit result) {
-                    Log.d(Push.TAG, "subscribeToTopic onSuccess");
-                    sendOnTopicSubscribe(null);
-                }
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "subscribeToTopic onSuccess");
+                sendOnTopicSubscribe(null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "subscribeToTopic onFailure", throwable);
+                sendOnTopicSubscribe("Failed to subscribe to topic=" + topic);
             });
     }
 
@@ -229,17 +215,13 @@ public class Push implements ClientIdCallback  {
         RuStorePushClient
             .INSTANCE
             .unsubscribeFromTopic(topic)
-            .addOnCompleteListener(new OnCompleteListener<Unit>() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "unsubscribeFromTopic onFailure", throwable);
-                    sendOnTopicUnsubscribe("Failed to unsubscribe from topic=" + topic);
-                }
-                @Override
-                public void onSuccess(Unit result) {
-                    Log.d(Push.TAG, "unsubscribeFromTopic onSuccess");
-                    sendOnTopicUnsubscribe(null);
-                }
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "unsubscribeFromTopic onSuccess");
+                sendOnTopicUnsubscribe(null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "unsubscribeFromTopic onFailure", throwable);
+                sendOnTopicUnsubscribe("Failed to unsubscribe from topic=" + topic);
             });
     }
     
@@ -398,4 +380,3 @@ public class Push implements ClientIdCallback  {
         Log.e(Push.TAG, "listener not inited");
     }
 }
-
