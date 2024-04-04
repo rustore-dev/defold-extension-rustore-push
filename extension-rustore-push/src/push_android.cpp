@@ -24,6 +24,8 @@ struct Push
     jmethodID            m_DeleteToken;
     jmethodID            m_TopicSubscribe;
     jmethodID            m_TopicUnsubscribe;
+    jmethodID            m_ShowToast;
+    jmethodID            m_CopyToClipboard;
 
     dmScript::LuaCallbackInfo* m_NewTokenListener;
     dmScript::LuaCallbackInfo* m_MessagesListener;
@@ -142,6 +144,44 @@ static int Push_TopicUnsubscribe(lua_State* L)
     return 0;
 }
 
+static int ShowToast(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    const char* msg = (char*)luaL_checkstring(L, 1);
+    jstring jmsg = env->NewStringUTF(msg);
+    
+    env->CallVoidMethod(g_Push.m_Push, g_Push.m_ShowToast, dmGraphics::GetNativeAndroidActivity(), jmsg);
+
+    env->DeleteLocalRef(jmsg);
+
+    thread.Detach();
+
+    return 0;
+}
+
+static int CopyToClipboard(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    const char* text = (char*)luaL_checkstring(L, 1);
+    jstring jtext = env->NewStringUTF(text);
+
+    env->CallVoidMethod(g_Push.m_Push, g_Push.m_CopyToClipboard, dmGraphics::GetNativeAndroidActivity(), jtext);
+
+    env->DeleteLocalRef(jtext);
+
+    thread.Detach();
+
+    return 0;
+}
+
 static const luaL_reg Push_methods[] =
 {
     {"set_on_token", Push_NewTokenListener},
@@ -150,6 +190,8 @@ static const luaL_reg Push_methods[] =
     {"delete_token", Push_DeleteToken},
     {"topic_subscribe", Push_TopicSubscribe},
     {"topic_unsubscribe", Push_TopicUnsubscribe},
+    {"show_toast", ShowToast},
+    {"copy_to_clipboard", CopyToClipboard},
 
     {0, 0}
 };
@@ -362,7 +404,9 @@ static dmExtension::Result AppInitializePush(dmExtension::AppParams* params)
     g_Push.m_DeleteToken = env->GetMethodID(push_class, "deleteToken", "(Landroid/app/Activity;)V");
     g_Push.m_TopicSubscribe = env->GetMethodID(push_class, "topicSubscribe", "(Landroid/app/Activity;Ljava/lang/String;)V");
     g_Push.m_TopicUnsubscribe = env->GetMethodID(push_class, "topicUnsubscribe", "(Landroid/app/Activity;Ljava/lang/String;)V");
-
+    g_Push.m_ShowToast = env->GetMethodID(push_class, "showToast", "(Landroid/app/Activity;Ljava/lang/String;)V");
+    g_Push.m_CopyToClipboard = env->GetMethodID(push_class, "copyToClipboard", "(Landroid/app/Activity;Ljava/lang/String;)V");
+    
     jmethodID get_instance_method = env->GetStaticMethodID(push_class, "getInstance", "()Lru/rustore/defoldpush/Push;");
     g_Push.m_Push = env->NewGlobalRef(env->CallStaticObjectMethod(push_class, get_instance_method));
 

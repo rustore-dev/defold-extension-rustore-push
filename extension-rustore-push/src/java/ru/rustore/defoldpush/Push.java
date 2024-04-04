@@ -13,6 +13,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.NotificationChannel;
 import android.app.PendingIntent;
+import android.content.ClipboardManager;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,11 +27,11 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
 import ru.rustore.sdk.pushclient.RuStorePushClient;
-import ru.rustore.sdk.core.tasks.OnCompleteListener;
 
 import com.vk.push.common.clientid.ClientId;
 import com.vk.push.common.clientid.ClientIdCallback;
@@ -39,6 +41,7 @@ public class Push implements ClientIdCallback  {
     public static final String DEFOLD_ACTIVITY = "com.dynamo.android.DefoldActivity";
     public static final String ACTION_FORWARD_PUSH = "ru.rustore.defoldpush.FORWARD";
     public static final String NOTIFICATION_CHANNEL_ID = "com.dynamo.android.notification_channel";
+    public static final String CLIP_DATA_TOOLTIP = "Copied Text";
 
     private static Push instance;
 
@@ -148,18 +151,14 @@ public class Push implements ClientIdCallback  {
     private void getToken(Activity activity) {
         RuStorePushClient.INSTANCE
             .getToken()
-            .addOnCompleteListener(new OnCompleteListener<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(Push.TAG, "getToken onSuccess token = " + result);
-                    sendOnNewTokenResult(result, null);
-                }
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "getToken onFailure", throwable);
-                    sendOnNewTokenResult(null, "Failed to get push token");
-                }
-         });
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "getToken onSuccess token = " + result);
+                sendOnNewTokenResult(result, null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "getToken onFailure", throwable);
+                sendOnNewTokenResult(null, "Failed to get push token");
+            });
     }
 
     public void deleteToken(final Activity activity) {
@@ -175,18 +174,13 @@ public class Push implements ClientIdCallback  {
         RuStorePushClient
             .INSTANCE
             .deleteToken()
-            .addOnCompleteListener(new OnCompleteListener<Unit>() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "deleteToken onFailure", throwable);
-                    sendOnDeleteTokenResult("Failed to delete push token");
-                }
-                
-                @Override
-                public void onSuccess(Unit result) {
-                    Log.d(Push.TAG, "deleteToken onSuccess");
-                    sendOnDeleteTokenResult(null);
-                }
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "deleteToken onSuccess");
+                sendOnDeleteTokenResult(null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "deleteToken onFailure", throwable);
+                sendOnDeleteTokenResult("Failed to delete push token");
             });
     }
 
@@ -203,17 +197,13 @@ public class Push implements ClientIdCallback  {
         RuStorePushClient
             .INSTANCE
             .subscribeToTopic(topic)
-            .addOnCompleteListener(new OnCompleteListener<Unit>() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "subscribeToTopic onFailure", throwable);
-                    sendOnTopicSubscribe("Failed to subscribe to topic=" + topic);
-                }
-                @Override
-                public void onSuccess(Unit result) {
-                    Log.d(Push.TAG, "subscribeToTopic onSuccess");
-                    sendOnTopicSubscribe(null);
-                }
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "subscribeToTopic onSuccess");
+                sendOnTopicSubscribe(null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "subscribeToTopic onFailure", throwable);
+                sendOnTopicSubscribe("Failed to subscribe to topic=" + topic);
             });
     }
 
@@ -229,17 +219,13 @@ public class Push implements ClientIdCallback  {
         RuStorePushClient
             .INSTANCE
             .unsubscribeFromTopic(topic)
-            .addOnCompleteListener(new OnCompleteListener<Unit>() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(Push.TAG, "unsubscribeFromTopic onFailure", throwable);
-                    sendOnTopicUnsubscribe("Failed to unsubscribe from topic=" + topic);
-                }
-                @Override
-                public void onSuccess(Unit result) {
-                    Log.d(Push.TAG, "unsubscribeFromTopic onSuccess");
-                    sendOnTopicUnsubscribe(null);
-                }
+            .addOnSuccessListener(result -> {
+                Log.d(Push.TAG, "unsubscribeFromTopic onSuccess");
+                sendOnTopicUnsubscribe(null);
+            })
+            .addOnFailureListener(throwable -> {
+                Log.e(Push.TAG, "unsubscribeFromTopic onFailure", throwable);
+                sendOnTopicUnsubscribe("Failed to unsubscribe from topic=" + topic);
             });
     }
     
@@ -397,5 +383,18 @@ public class Push implements ClientIdCallback  {
         }
         Log.e(Push.TAG, "listener not inited");
     }
-}
 
+    public void showToast(final Activity activity, String message) {
+        activity.runOnUiThread(() -> Toast.makeText(activity, message, Toast.LENGTH_LONG).show());
+    }
+
+    public void copyToClipboard(final Activity activity, String text) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) return;
+
+        if (activity != null) {
+            ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText(CLIP_DATA_TOOLTIP, text);
+            clipboard.setPrimaryClip(clip);
+        }
+    }
+}
