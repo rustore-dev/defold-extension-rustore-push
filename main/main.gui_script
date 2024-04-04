@@ -52,10 +52,10 @@ local function set_push_token(text, ...)
 	print(text)
 end
 
-local function listener(self, payload, activated, from)
+local function listener(self, payload, activated, from, notification)
 	-- The payload arrives here.
 	set_msg(string.format("Push payload received: (from: %s, activated: %s)", from, tostring(activated)))
-	set_payload(stringify(payload))
+	set_payload(stringify(payload)..stringify(notification))
 	pprint(payload)
 end
 

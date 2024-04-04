@@ -24,10 +24,13 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import androidx.core.app.NotificationCompat;
 
@@ -47,6 +50,10 @@ public class Push implements ClientIdCallback  {
 
     private IPushListener listener = null;
     private ClientIdCallback clientIdCallback = null;
+
+    private Gson gson = new GsonBuilder()
+        .registerTypeAdapter(Uri.class, new UriTypeAdapter())
+        .create();
 
     private static boolean defoldActivityVisible;
     public static boolean isDefoldActivityVisible() {
@@ -281,13 +288,14 @@ public class Push implements ClientIdCallback  {
         return flags;
     }
 
-    public void showNotification(Context context, String from,  Map<String, String> extras, boolean withNotification) {
+    public void showNotification(Context context, String from,  Map<String, String> extras, boolean withNotification, ru.rustore.sdk.pushclient.messaging.model.Notification notification) {
         JSONObject payloadJson = toJson(extras);
         String payloadString = payloadJson.toString();
+        String notificationJson = gson.toJson(notification);
 
         // if was notification push is showed
         if (isDefoldActivityVisible() || withNotification) {
-            onPush(context, from, payloadString, false);
+            onPush(context, from, payloadString, false, notificationJson);
             return;
         }
 
@@ -296,6 +304,8 @@ public class Push implements ClientIdCallback  {
 
         intent.putExtra("payload", payloadString);
         intent.putExtra("from", from);
+        intent.putExtra("notification", notificationJson);
+        intent.putExtra("rustorepushlaunch", true);
 
         int id = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
         final int flags = createPendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
@@ -369,15 +379,15 @@ public class Push implements ClientIdCallback  {
         builder.setContentIntent(contentIntent);
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification = builder.build();
-        notification.defaults = Notification.DEFAULT_ALL;
-        notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        nm.notify(id, notification);
+        Notification notificationObject = builder.build();
+        notificationObject.defaults = Notification.DEFAULT_ALL;
+        notificationObject.flags |= Notification.FLAG_AUTO_CANCEL;
+        nm.notify(id, notificationObject);
     }
 
-    public void onPush(Context context, String from, String payload, boolean wasActivated) {
+    public void onPush(Context context, String from, String payload, boolean wasActivated, String notification) {
         if (listener != null) {
-            listener.onMessage(payload, wasActivated, from);
+            listener.onMessage(payload, wasActivated, from, notification);
             Log.d(Push.TAG, "send to listener");
             return;
         }

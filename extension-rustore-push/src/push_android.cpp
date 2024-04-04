@@ -247,16 +247,20 @@ JNIEXPORT void JNICALL Java_ru_rustore_defoldpush_PushJNI_onDeleteToken(JNIEnv* 
 }
 
 
-JNIEXPORT void JNICALL Java_ru_rustore_defoldpush_PushJNI_onMessage(JNIEnv* env, jobject obj, jstring json, bool wasActivated, jstring from)
+JNIEXPORT void JNICALL Java_ru_rustore_defoldpush_PushJNI_onMessage(JNIEnv* env, jobject obj, jstring json, bool wasActivated, jstring from, jstring notification)
 {
     const char* j = 0;
     const char* f = 0;
+    const char* n = 0;
     
     if (json) {
         j = env->GetStringUTFChars(json, 0);
     }
     if (from) {
         f = env->GetStringUTFChars(from, 0);
+    }
+    if (notification) {
+        n = env->GetStringUTFChars(notification, 0);
     }
 
     dmRustorePush::Command cmd;
@@ -265,6 +269,7 @@ JNIEXPORT void JNICALL Java_ru_rustore_defoldpush_PushJNI_onMessage(JNIEnv* env,
     cmd.m_Result = strdup(j);
     cmd.m_WasActivated = wasActivated;
     cmd.m_From = strdup(f);
+    cmd.m_Notification = strdup(n);
 
     dmRustorePush::QueuePush(&g_Push.m_CommandQueue, &cmd);
 
@@ -272,6 +277,9 @@ JNIEXPORT void JNICALL Java_ru_rustore_defoldpush_PushJNI_onMessage(JNIEnv* env,
         env->ReleaseStringUTFChars(json, j);
     }
     env->ReleaseStringUTFChars(from, f);
+    if (n) {
+        env->ReleaseStringUTFChars(json, n);
+    }
 }
 
 JNIEXPORT void JNICALL Java_ru_rustore_defoldpush_PushJNI_onSubscribeToTopic(JNIEnv* env, jobject obj, jstring errorMessage)
