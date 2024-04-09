@@ -35,6 +35,30 @@ Your rustore project id from developer console, section pushes
 
 Package name for your app, must be equal with rustore project
 
+### Configuring the Manifest
+
+To be able to receive push messages with `notification` and `android.notification.title`, you must make `PushDispatchActivity` the main activity. To do this, add the following entry to your project manifest:
+
+```xml
+<activity android:name="ru.rustore.defoldpush.PushDispatchActivity">
+	<intent-filter>
+		<action android:name="android.intent.action.MAIN" />
+		<category android:name="android.intent.category.LAUNCHER" />
+	</intent-filter>
+</activity>
+```
+
+At the same time, you must remove the following `<intent-filter>` from the `com.dynamo.android.DefoldActivity activity`:
+
+```xml
+<intent-filter>
+	<action android:name="android.intent.action.MAIN" />
+	<category android:name="android.intent.category.LAUNCHER" />
+</intent-filter>
+```
+
+To perform these actions, you can use an example `ExtendedAndroidManifest.xml`. Open your game.project and specify the path `/extension-rustore-push/manifests/android/ExtendedAndroidManifest.xml` in the `Manifest` field of the `Android` section.
+
 ### Default Push title and body
 
 If you want add default push title and push body add folow params in `[android]` section
@@ -169,7 +193,7 @@ end)
 
 ### Important
 
-Do not send push messages with `notification` and `android.notification.title` it will be processed by RuStore. And do not work properly.
+Without installing `PushDispatchActivity` as the main activity do not send push messages with `notification` and `android.notification.title` it will be processed by RuStore. And do not work properly.
 
 Send `Data` push with follow field:
 
