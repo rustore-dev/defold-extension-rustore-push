@@ -11,7 +11,7 @@ public class PushJNI implements IPushListener {
     public native void onNewToken(String pushToken, String errorMessage);
 
     @Override
-    public native void onMessage(String json, boolean wasActivated, String from);
+    public native void onMessage(String json, boolean wasActivated, String from, String notification);
     
     @Override
     public native void onDeleteToken(String errorMessage);

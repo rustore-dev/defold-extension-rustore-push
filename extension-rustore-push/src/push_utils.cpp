@@ -67,8 +67,9 @@ static void HandlePushMessageResult(const dmRustorePush::Command* cmd)
     dmScript::JsonToLua(L, json, strlen(json));
     lua_pushboolean(L, cmd->m_WasActivated);
     lua_pushstring(L, cmd->m_From);
+    lua_pushstring(L, cmd->m_Notification);
 
-    int ret = dmScript::PCall(L, 4, 0);
+    int ret = dmScript::PCall(L, 5, 0);
     (void)ret;
 
     dmScript::TeardownCallback(cmd->m_Callback);
@@ -172,6 +173,7 @@ void dmRustorePush::HandleCommand(dmRustorePush::Command* cmd, void* ctx)
     free((void*)cmd->m_Result);
     free((void*)cmd->m_Error);
     free((void*)cmd->m_From);
+    free((void*)cmd->m_Notification);
 
     // free callbacks
     switch (cmd->m_Command) {

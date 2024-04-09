@@ -35,6 +35,7 @@ namespace dmRustorePush
 		const char* m_Error;
 		bool     	m_WasActivated;
 		const char* m_From;
+		const char* m_Notification;
 	};
 
 	struct CommandQueue

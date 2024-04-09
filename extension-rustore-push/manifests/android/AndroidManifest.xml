@@ -25,8 +25,8 @@
         <!-- Rustore notifications -->
         <activity android:name="ru.rustore.defoldpush.PushDispatchActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:launchMode="singleTask"
-            android:exported="false"
+            android:exported="true"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="ru.rustore.defoldpush.FORWARD" />

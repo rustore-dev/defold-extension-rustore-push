@@ -18,14 +18,15 @@ public class RustoreMessagingService extends RuStoreMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage message) {
         Log.d(TAG, "onMessageReceived = " + message);
-        if (message.getData().size() > 0) {
+        if (message.getData().size() > 0 || message.getNotification() != null) {
             boolean withNotification = false;
             if(message.getNotification() != null && message.getNotification().getTitle() != null) {
                 withNotification = true;
                 Log.w(TAG, "with notification title");
             }
-            Log.d(TAG, "onMessageReceived from = " + message.getFrom() + " data = " + message.getData());
-            Push.getInstance().showNotification(this, message.getFrom(), message.getData(), withNotification);
+            Notification notification = message.getNotification();
+            Log.d(TAG, "onMessageReceived from = " + message.getFrom() + " data = " + message.getData() + " notification = " + notification);
+            Push.getInstance().showNotification(this, message.getFrom(), message.getData(), withNotification, notification);
         }
    }
 }
