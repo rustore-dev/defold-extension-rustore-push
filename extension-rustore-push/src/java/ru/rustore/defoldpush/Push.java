@@ -402,9 +402,11 @@ public class Push implements ClientIdCallback  {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) return;
 
         if (activity != null) {
-            ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clip = ClipData.newPlainText(CLIP_DATA_TOOLTIP, text);
-            clipboard.setPrimaryClip(clip);
+            activity.runOnUiThread(() -> {
+                ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText(CLIP_DATA_TOOLTIP, text);
+                clipboard.setPrimaryClip(clip);
+            });
         }
     }
 }
