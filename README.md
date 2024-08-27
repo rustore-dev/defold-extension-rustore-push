@@ -14,7 +14,7 @@ Or point to the ZIP file of a specific [release](https://gitflic.ru/project/rust
 
 ### Rustore
 
-Full documentation to register project and get service token on [Rustore help page](https://help.rustore.ru/rustore/for_developers/developer-documentation/sdk_push-notifications/sens_push_notifications)
+Full documentation to register project and get service token on [Rustore help page][10]
 
 ### Game
 
@@ -199,3 +199,5 @@ Send `Data` push with follow field:
 
 - title - for push message title
 - message - for push message body
+
+[10]: https://www.rustore.ru/help/sdk/push-notifications/defold/2-3-0
