@@ -18,7 +18,10 @@ include_dirs = extension-rustore-push
 [android]
 input_method = HiddenInputField
 package = ru.rustore.defoldpush
-minimum_sdk_version = 23
+rustore_project_id = -Yv4b5cM2yfXm0bZyY6Rk7AHX8SrHmLI
+minimum_sdk_version = 24
+manifest = /extension-rustore-push/manifests/android/ExtendedAndroidManifest.xml
+target_sdk_version = 34
 
 [native_extension]
 app_manifest = /generated.appmanifest
